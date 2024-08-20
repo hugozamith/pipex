@@ -5,17 +5,69 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: hteixeir <hteixeir@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/08/02 09:54:02 by gcollet           #+#    #+#             */
-/*   Updated: 2024/08/19 17:13:47 by hteixeir         ###   ########.fr       */
+/*   Created: 2024/08/20 15:28:44 by hteixeir          #+#    #+#             */
+/*   Updated: 2024/08/20 15:28:46 by hteixeir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
 #include "pipex.h"
 
-void child_process(char **argv, char **envp, int *fd)
+char	*find_path(char *cmd, char **envp)
 {
-	int filein;
+	char	**paths;
+	char	*path;
+	int		i;
+	char	*part_path;
+
+	i = 0;
+	while (ft_strnstr(envp[i], "PATH", 4) == 0)
+		i++;
+	paths = ft_split(envp[i] + 5, ':');
+	i = 0;
+	while (paths[i])
+	{
+		part_path = ft_strjoin(paths[i], "/");
+		path = ft_strjoin(part_path, cmd);
+		free(part_path);
+		if (access(path, F_OK) == 0)
+			return (path);
+		free(path);
+		i++;
+	}
+	i = -1;
+	while (paths[++i])
+		free(paths[i]);
+	free(paths);
+	return (0);
+}
+
+void	execute(char *argv, char **envp)
+{
+	char	**cmd;
+	int		i;
+	char	*path;
+
+	i = -1;
+	cmd = ft_split(argv, ' ');
+	path = find_path(cmd[0], envp);
+	if (!path)
+	{
+		while (cmd[++i])
+			free(cmd[i]);
+		free(cmd);
+		perror("\033[31mError");
+		exit(EXIT_FAILURE);
+	}
+	if (execve(path, cmd, envp) == -1)
+	{
+		perror("\033[31mError");
+		exit(EXIT_FAILURE);
+	}
+}
+
+void	child_process(char **argv, char **envp, int *fd)
+{
+	int	filein;
 
 	filein = open(argv[1], O_RDONLY, 0777);
 	if (filein == -1)
@@ -26,10 +78,9 @@ void child_process(char **argv, char **envp, int *fd)
 	execute(argv[2], envp);
 }
 
-
-void parent_process(char **argv, char **envp, int *fd)
+void	parent_process(char **argv, char **envp, int *fd)
 {
-	int fileout;
+	int	fileout;
 
 	fileout = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	if (fileout == -1)
@@ -42,8 +93,8 @@ void parent_process(char **argv, char **envp, int *fd)
 
 int	main(int argc, char **argv, char **envp)
 {
-	int	fd[2];
-	pid_t pid1;
+	int		fd[2];
+	pid_t	pid1;
 
 	if (argc == 5)
 	{
