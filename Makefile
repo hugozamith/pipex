@@ -2,7 +2,6 @@ LIBFT_PATH		=	./libraries/libft
 LIBFT			=	$(LIBFT_PATH)/libft.a
 
 SOURCES_FILES	=	pipex.c \
-					pipex_utils.c \
 
 SOURCES_DIR		=	sources
 

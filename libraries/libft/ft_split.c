@@ -6,33 +6,35 @@
 /*   By: hteixeir <hteixeir@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 18:09:15 by hteixeir          #+#    #+#             */
-/*   Updated: 2024/04/27 16:32:00 by hteixeir         ###   ########.fr       */
+/*   Updated: 2024/08/26 14:08:25 by hteixeir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
 #include "libft.h"
 
-size_t	ft_slicecount(char const *pao, char n)
+size_t	ft_slicecount(char const *pao, char n, int plics, int in)
 {
-	int		dentro;
 	size_t	fatias;
 
 	fatias = 0;
 	while (*pao)
 	{
-		dentro = 1;
-		while (*pao == n && *pao)
-			pao++;
-		while (*pao != n && *pao)
+		if (*pao == '\'')
+			plics = !plics;
+		if (*pao != n || plics)
 		{
-			if (dentro)
+			if (in == 0)
 			{
 				fatias++;
-				dentro = 0;
+				in = 1;
 			}
-			pao++;
 		}
+		else
+		{
+			in = 0;
+		}
+		pao++;
 	}
 	return (fatias);
 }
@@ -53,29 +55,31 @@ int	ft_safe_malloc(char **ret, int x, int i)
 	return (0);
 }
 
-int	ft_fill(char **ret, char const *s, char c)
+int	ft_fill(char **ret, char const *s, char c, int plics)
 {
-	int		palavra;
 	size_t	len;
+	int		word;
 
-	palavra = 0;
+	word = 0;
 	while (*s)
 	{
 		len = 0;
-		while (*s == c && *s)
+		while (*s == c && *s && !plics)
 			s++;
-		while (*s != c && *s)
+		while ((*s != c || plics) && *s)
 		{
+			if (*s == '\'')
+				plics = !plics;
 			s++;
 			len++;
 		}
 		if (len)
 		{
-			if (ft_safe_malloc(ret, palavra, len + 1))
+			if (ft_safe_malloc(ret, word, len + 1))
 				return (0);
-			ft_strlcpy(ret[palavra], s - len, len + 1);
+			ft_strlcpy(ret[word], s - len, len + 1);
+			word++;
 		}
-		palavra++;
 	}
 	return (1);
 }
@@ -88,12 +92,12 @@ char	**ft_split(char const *s, char c)
 	if (!(s))
 		return (NULL);
 	palavras = 0;
-	palavras = (ft_slicecount(s, c));
+	palavras = (ft_slicecount(s, c, 0, 0));
 	ret = malloc((palavras + 1) * sizeof(char *));
 	if (!(ret))
 		return (NULL);
 	ret[palavras] = (NULL);
-	if (!(ft_fill(ret, s, c)))
+	if (!(ft_fill(ret, s, c, 0)))
 		return (NULL);
 	return (ret);
 }
